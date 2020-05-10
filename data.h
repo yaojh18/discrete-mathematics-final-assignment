@@ -15,10 +15,9 @@ class PaperData{
     public:
         string conference;
         int year;
-        string DOI;
         string title;
         string abstract;
-        vector<AuthorData> author = {};
+        vector<string> authorname = {};
         vector<string> referencesDOI = {};
         vector<string> keywords = {};
         PaperData(){}
@@ -58,8 +57,8 @@ class Connection{
         Connection(){}
 };
 
-vector<AuthorData> authordata;
-vector<PaperData> paperdata;
+map<string,AuthorData> authordata;
+map<string,PaperData> paperdata;
 
 vector<Paper> paper;
 vector<Author> author;

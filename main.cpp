@@ -4,8 +4,7 @@
 using namespace std;
 
 int main(){
-    load_author_data();
-    load_paper_data();
+    load_data();
     init_author();
     init_paper();
     return 0;
