@@ -57,12 +57,12 @@ class Connection{
         Connection(){}
 };
 
-map<string,AuthorData> authordata;
-map<string,PaperData> paperdata;
+extern map<string,AuthorData> authordata;
+extern map<string,PaperData> paperdata;
 
-vector<Paper> paper;
-vector<Author> author;
+extern vector<Paper> paper;
+extern vector<Author> author;
 
-vector<vector<Connection>> paper_connection;
-vector<vector<Connection>> author_connection;
+extern vector<vector<Connection>> paper_connection;
+extern vector<vector<Connection>> author_connection;
 

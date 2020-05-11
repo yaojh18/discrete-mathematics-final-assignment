@@ -1,5 +1,8 @@
 #include"init.h"
-
+vector<string> author_id_to_name;
+vector<string> paper_id_to_DOI;
+map<string,int> author_name_to_id;
+map<string,int> paper_DOI_to_id;
 void init_paper(){
     //TODO
     for (int i=0;i<paper_id_to_DOI.size();i++){

@@ -4,6 +4,7 @@ static int paper_cnt=0;
 static int author_cnt=0;
 void load_data(){
     ifstream fin("papers.csv");
+    ofstream fout("output.txt");
     string line;
     getline(fin,line);
     while (getline(fin, line))                          
@@ -13,16 +14,20 @@ void load_data(){
         vector<string> tp={};
         string s;
         while (1){
-            if (sin.peek()=='"')
+            if (sin.peek()=='"'){
+                sin.get();
                 if (!getline(sin,s,'"'))break;
                 else{
-                    tp.push_back(s);
+                    tp.push_back(s);  //'"' in abstracct
                     sin.get();
                 } 
+            } 
             else
                 if (!getline(sin,s,',')) break; 
                 else tp.push_back(s);
-        }
+	    }
+        for (int i=0;i<14;i++)
+            fout<<tp[i]<<endl;
         paper_id_to_DOI.push_back(tp[3]);
         paper_DOI_to_id.insert(make_pair(tp[3],paper_cnt++));
         p.conference=tp[0];
@@ -32,7 +37,7 @@ void load_data(){
         sin.str(tp[12]);
         while (getline(sin,s,';'))
             p.referencesDOI.push_back(s);
-        sin.str(tp[13]);
+        sin.str(tp[13]);   //13 is null
         while (getline(sin,s,','))
             p.keywords.push_back(s);
         vector<string> aname;
