@@ -13,18 +13,22 @@ void load_data(){
         PaperData p;
         vector<string> tp={};
         string s;
-        while (1){
+        while (!sin.eof()){
             if (sin.peek()=='"'){
-                sin.get();
-                if (!getline(sin,s,'"'))break;
-                else{
-                    tp.push_back(s);  //'"' in abstracct
+                string ss="";
+                do{
                     sin.get();
-                } 
+                    getline(sin,s,'"');
+                    ss+=s;
+                }
+                while (sin.peek()=='"');
+                tp.push_back(ss);  
+                sin.get();
             } 
-            else
-                if (!getline(sin,s,',')) break; 
-                else tp.push_back(s);
+            else{
+                getline(sin,s,',');
+                tp.push_back(s);
+            }  
 	    }
         for (int i=0;i<14;i++)
             fout<<tp[i]<<endl;
@@ -37,7 +41,7 @@ void load_data(){
         sin.str(tp[12]);
         while (getline(sin,s,';'))
             p.referencesDOI.push_back(s);
-        sin.str(tp[13]);   //13 is null
+        sin.str(tp[13]);   
         while (getline(sin,s,','))
             p.keywords.push_back(s);
         vector<string> aname;
