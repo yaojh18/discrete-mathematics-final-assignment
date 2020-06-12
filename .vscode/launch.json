@@ -12,7 +12,7 @@
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
-            "externalConsole": false,        //强调一下，我习惯用vscode自带的终端，所以你不习惯可以改为true
+            "externalConsole": true,        //强调一下，我习惯用vscode自带的终端，所以你不习惯可以改为true
             "MIMode": "gdb",
             "miDebuggerPath": "C:\\mingw64\\bin\\gdb.exe",
             "setupCommands": [
