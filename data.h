@@ -29,6 +29,8 @@ class Author{
         vector<int> paperid = {};
         int closeness_centrality = 0;
         int betweenness_centrality = 0;
+        int group = -1;
+        int community = 0;
         //ADD
 
         Author(){}
@@ -44,16 +46,16 @@ class Paper{
         vector<string> keywords = {};
         int closeness_centrality = 0;
         int betweenness_centrality = 0;
+        int group = -1;
+        int community = 0;
         //ADD
 
         Paper(){}
 };
 class Connection{
     public:
-        int distance = INT_MAX;
-        int weight = INT_MAX;
-        //ADD
-
+        int distance = 200000;
+        int intermediary = -1;
         Connection(){}
 };
 
@@ -65,4 +67,9 @@ extern vector<Author> author;
 
 extern vector<vector<Connection>> paper_connection;
 extern vector<vector<Connection>> author_connection;
+
+extern vector<string> author_id_to_name;
+extern vector<string> paper_id_to_DOI;
+extern map<string,int> author_name_to_id;
+extern map<string,int> paper_DOI_to_id;
 
