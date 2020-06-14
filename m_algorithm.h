@@ -1,14 +1,17 @@
 #pragma once
 #include <algorithm>
+#include <cmath>
 #include <cstring>
 #include "data.h"
+#include <stack>
+#include <queue>
 #define SIZE 256   
 
 using namespace std;
 
 class BM_Search{
     private:
-        void generateBadChar(char *b, int m, int *badchar){
+        void generateBadChar(const char *b, int m, int *badchar){
             int i, ascii;
             for(i = 0; i < SIZE; ++i){
                 badchar[i] = -1;
@@ -18,7 +21,7 @@ class BM_Search{
                 badchar[ascii] = i;
             }
         }
-        void generateGS(char *b, int m, int *suffix, bool *prefix){
+        void generateGS(const char *b, int m, int *suffix, bool *prefix){
             int i, j, k;
             for(i = 0; i < m; ++i){
                 suffix[i] = -1;
@@ -48,7 +51,7 @@ class BM_Search{
         }
     public:
         BM_Search() {}
-        int operator () (char* a, char *b){
+        int operator () (const char* a, const char *b){
             int n = strlen(a);
             int m = strlen(b);
             int *badchar = new int [SIZE];
@@ -100,8 +103,7 @@ class Warshall{
             for (int i=0;i<v;i++){
                 int closeness = 0;
                 for (int j=0;j<v;j++)
-                    if (map[i][j].intermediary!=-1)
-                        closeness += map[i][j].distance;
+                    closeness += map[i][j].distance;
                 // need changing
                 arr[i].closeness_centrality = closeness;
             }
@@ -112,6 +114,10 @@ class Warshall{
             map = _map;
             arr = _arr;
             int v = map.size();
+            for (int i=0;i<arr.size();i++){
+                for (int j=0;j<arr[i].neighbors.size();j++)
+                    map[i][arr[i].neighbors[j]].distance = arr[i].distance[j];
+            }
             for (int k=0;k<v;k++)
                 for (int i=0;i<v;i++)
                     for (int j=0;j<v;j++)
@@ -129,28 +135,97 @@ template <typename T>
 class DFS{
     private:
         int group_cnt = -1;
-        vector<vector<Connection>>& map;
-        T& arr;
-        void DFS_search(int pos, int v){
-            for (int i = 0; i<v; i++){
-                if (map[pos][i].intermediary != -1 && arr[i].group == -1){
-                   arr[i].group = group_cnt;
-                   DFS_search(i,v);
+        void DFS_search(vector<vector<Connection>>& map, T& arr,int root){
+            stack<int> stack;
+            stack.push(root);
+            while (!stack.empty()){
+                int pos = stack.top();
+                stack.pop();
+                for (int i = 0; i<arr[pos].neighbors.size(); i++){
+                    if (arr[arr[pos].neighbors[i]].group == -1){
+                        arr[arr[pos].neighbors[i]].group = group_cnt;
+                        stack.push(arr[pos].neighbors[i]);
+                    }
                 }
             }
         }
     public:
         DFS(){}
-        void operator () (vector<vector<Connection>>& _map, T& _arr){
-            map = _map;
-            arr = _arr;
-            int v = map.size();
+        void operator () (T& arr){
+            int v = arr.size();
             for (int i = 0; i<v; i++)
                 if (arr[i].group == -1){
                     group_cnt++;
                     arr[i].group = group_cnt;
                     DFS_search(i, v);
                 }
+        }
+};
+class BFS{
+    public:
+        BFS(){}
+        void operator() (vector<Author>& arr){
+            
+        }
+};
+
+
+template <typename T>
+class LabelSpreading{
+    public:
+        LabelSpreading(){}
+        void operator () (T& arr){
+            int size = arr.size();
+            const double a = 20.0;
+            const int max_iteration = 100;
+
+            vector<vector<double>> weight(size,vector<double>(size));
+            for (int i=0;i<size;i++){
+                double sum = 0.0;
+                for (int j=0;j<arr[i].neighbors.size();j++){
+                    weight[i][arr[i].neighbors[j]] = exp(-pow(arr[i].distance[j],2)/pow(a,2));
+                    sum += weight[i][arr[i].neighbors[j]];
+                }
+                for (int j=0;j<arr[i].neighbors.size();j++){
+                    weight[i][arr[i].neighbors[j]]/=sum;
+                } 
+            }
+            for (int i=0;i<size;i++){
+                arr[i].label = i;
+            }
+
+            bool flag = true;
+            int interation = 0;
+            while (flag&&interation<max_iteration){
+                flag = true;
+                interation++;
+                for (int i = 0;i<size;i++){
+                    double max_chance = 0.0;
+                    int max_position;
+                    map<int,double> label_chance;
+                    for (int j = 0; j<arr[i].neighbors.size();j++){
+                        auto k = label_chance.find(arr[arr[i].neighbors[j]].label);
+                        if (k == label_chance.end()){
+                            label_chance.insert(make_pair(arr[arr[i].neighbors[j]].label,weight[i][arr[i].neighbors[j]]));
+                            if (weight[i][arr[i].neighbors[j]]>max_chance){
+                                max_chance = weight[i][arr[i].neighbors[j]];
+                                max_position = arr[arr[i].neighbors[j]].label;
+                            }
+                        }
+                        else{
+                            k->second+=weight[i][arr[i].neighbors[j]];
+                            if (k->second>max_chance){
+                                max_chance = k->second;
+                                max_position = k->first;
+                            }
+                        }
+                    }
+                    if (arr[i].label != max_position){
+                        arr[i].label = max_position;
+                        flag = false;
+                    }
+                }
+            }
         }
 };
 

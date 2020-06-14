@@ -22,6 +22,9 @@ map<string,int> paper_DOI_to_id;
 int main(){
     load_data();
     init();
+    init_distance();
+    init_group();
+    init_label();
     system("pause");
     return 0;
 }

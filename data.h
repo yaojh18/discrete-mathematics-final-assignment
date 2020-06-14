@@ -26,31 +26,33 @@ class Author{
     public:
         string name;
         string affiliation = "";
-        vector<int> paperid = {};
+        vector<int> paperid;
         int closeness_centrality = 0;
         int betweenness_centrality = 0;
         int group = -1;
-        int community = 0;
-        //ADD
-
+        int label = 0;
+        vector<int> neighbors;
+        vector<int> distance;
         Author(){}
 };
 class Paper{
     public:
         string conference;
         int year;
-        string title;
-        string abstract;
-        vector<Author> author = {};
-        vector<int> references = {};
-        vector<string> keywords = {};
+        string DOI;
+        vector<int> author;
+        vector<int> references;
         int closeness_centrality = 0;
         int betweenness_centrality = 0;
         int group = -1;
-        int community = 0;
-        //ADD
+        int label = 0;
+        vector<int> neighbors;
+        vector<int> distance;
 
-        Paper(){}
+        string& title;
+        string& abstract;
+        vector<string>& keywords;
+        Paper(string t, string a, vector<string> k):title(t),abstract(a),keywords(k){}
 };
 class Connection{
     public:
