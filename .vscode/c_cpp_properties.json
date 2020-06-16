@@ -4,7 +4,8 @@
             "name": "C++",
             "compilerPath": "C:\\mingw64\\bin\\gcc.exe",
             "includePath": [
-                "${workspaceFolder}"
+                "${workspaceFolder}",
+                "e:/json"
             ],
             "defines": [],
             "browse": {

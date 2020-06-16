@@ -49,10 +49,10 @@ class Paper{
         vector<int> neighbors;
         vector<int> distance;
 
-        string& title;
-        string& abstract;
-        vector<string>& keywords;
-        Paper(string t, string a, vector<string> k):title(t),abstract(a),keywords(k){}
+        string title;
+        string abstract;
+        vector<string> keywords;
+        Paper(){}
 };
 class Connection{
     public:
@@ -60,18 +60,4 @@ class Connection{
         int intermediary = -1;
         Connection(){}
 };
-
-extern map<string,AuthorData> authordata;
-extern map<string,PaperData> paperdata;
-
-extern vector<Paper> paper;
-extern vector<Author> author;
-
-extern vector<vector<Connection>> paper_connection;
-extern vector<vector<Connection>> author_connection;
-
-extern vector<string> author_id_to_name;
-extern vector<string> paper_id_to_DOI;
-extern map<string,int> author_name_to_id;
-extern map<string,int> paper_DOI_to_id;
 

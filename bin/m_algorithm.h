@@ -4,86 +4,9 @@
 #include <cstring>
 #include "data.h"
 #include <stack>
-#include <queue>
-#define SIZE 256   
+#include <queue> 
 
 using namespace std;
-
-class BM_Search{
-    private:
-        void generateBadChar(const char *b, int m, int *badchar){
-            int i, ascii;
-            for(i = 0; i < SIZE; ++i){
-                badchar[i] = -1;
-            }
-            for(i = 0; i < m; ++i){
-                ascii = int(b[i]);
-                badchar[ascii] = i;
-            }
-        }
-        void generateGS(const char *b, int m, int *suffix, bool *prefix){
-            int i, j, k;
-            for(i = 0; i < m; ++i){
-                suffix[i] = -1;
-                prefix[i] = false;
-            }
-            for(i = 0; i < m-1; ++i){
-                j = i;
-                k = 0;
-                while(j >= 0 && b[j] == b[m-1-k]){
-                    --j;
-                    ++k;
-                    suffix[k] = j+1;
-                }
-                if(j == -1)
-                    prefix[k] = true;
-            }
-        }
-        int moveByGS(int j, int m, int *suffix, bool *prefix){
-            int k = m - 1 - j;
-            if(suffix[k] != -1)
-                return j - suffix[k] + 1;
-            for(int r = j + 2; r < m; ++r){
-                if(prefix[m-r] == true)
-                    return r;
-            }
-            return m;
-        }
-    public:
-        BM_Search() {}
-        int operator () (const char* a, const char *b){
-            int n = strlen(a);
-            int m = strlen(b);
-            int *badchar = new int [SIZE];
-            generateBadChar(b,m,badchar);    
-            int *suffix = new int [m];
-            bool *prefix = new bool [m];
-            generateGS(b, m, suffix, prefix);   
-            int i = 0, j, moveLen1, moveLen2;
-            while(i < n-m+1){
-                for(j = m -1; j >= 0; --j){
-                    if(a[i+j] != b[j])
-                        break; 
-                }
-                if(j < 0){
-                    delete [] badchar;
-                    delete [] suffix;
-                    delete [] prefix;
-                    return i;   
-                }
-                moveLen1 = j - badchar[int(a[i+j])];
-                moveLen2 = 0;
-                if(j < m-1){
-                    moveLen2 = moveByGS(j,m,suffix,prefix);
-                }
-                i = i + max(moveLen1,moveLen2);
-            }
-            delete [] badchar;
-            delete [] suffix;
-            delete [] prefix;
-            return -1;
-        }
-};
 
 template <typename T>
 class Warshall{
@@ -109,10 +32,8 @@ class Warshall{
             }
         }
     public:
-        Warshall(){}
-        void operator () (vector<vector<Connection>>& _map, T& _arr){
-            map = _map;
-            arr = _arr;
+        Warshall(vector<vector<Connection>>& _map, T& _arr):map(_map),arr(_arr){}
+        void operator () (){
             int v = map.size();
             for (int i=0;i<arr.size();i++){
                 for (int j=0;j<arr[i].neighbors.size();j++)
@@ -135,7 +56,7 @@ template <typename T>
 class DFS{
     private:
         int group_cnt = -1;
-        void DFS_search(vector<vector<Connection>>& map, T& arr,int root){
+        void DFS_search(T& arr, int root){
             stack<int> stack;
             stack.push(root);
             while (!stack.empty()){
@@ -157,7 +78,7 @@ class DFS{
                 if (arr[i].group == -1){
                     group_cnt++;
                     arr[i].group = group_cnt;
-                    DFS_search(i, v);
+                    DFS_search(arr, i);
                 }
         }
 };
@@ -174,11 +95,9 @@ template <typename T>
 class LabelSpreading{
     public:
         LabelSpreading(){}
-        void operator () (T& arr){
+        void operator () (T& arr, const double a){
             int size = arr.size();
-            const double a = 20.0;
-            const int max_iteration = 100;
-
+            const int max_iteration = 10000;
             vector<vector<double>> weight(size,vector<double>(size));
             for (int i=0;i<size;i++){
                 double sum = 0.0;

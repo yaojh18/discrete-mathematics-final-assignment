@@ -7,8 +7,10 @@ using namespace std;
 static int paper_cnt=0;
 static int author_cnt=0;
 
-void load_data(){
-    ifstream fin("papers.csv");
+void load_data(map<string,PaperData>& paperdata, map<string,AuthorData>& authordata, 
+vector<string>& paper_id_to_DOI, map<string,int>& paper_DOI_to_id, 
+vector<string>& author_id_to_name, map<string,int>& author_name_to_id){
+    ifstream fin("../bin/test.csv");
     string line;
     getline(fin,line);
     while (getline(fin, line))                          
