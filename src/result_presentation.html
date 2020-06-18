@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>result_presentation</title>
+    <script type="text/javascript" src="http://d3js.org/d3.v5.js"></script>
+</head>
+<body>
+<button onclick = draw("paper",1) style="width:180px;height:50px;margin-left:150px"> 显示论文介数中心度</button>
+<button onclick = draw("paper",2) style="width:180px;height:50px"> 显示论文紧密中心度</button>
+<button onclick = draw("paper",3) style="width:180px;height:50px"> 显示论文聚类结果</button>
+<button onclick = draw("author",1) style="width:180px;height:50px">显示作者介数中心度</button>
+<button onclick = draw("author",2) style="width:180px;height:50px">显示作者紧密中心度</button>
+<button onclick = draw("author",3) style="width:180px;height:50px">显示作者聚类结果</button>
+<input type="text" value="这里显示第一个节点的信息，使用鼠标左键点击节点获取信息" id="fisrt_node" style="width:400px;height:150px;margin-top:10px;margin-left:290px"/>
+<input type="text" value="这里显示第二个节点的信息，使用Ctrl+鼠标左键点击节点获取信息" id="second_node" style="width:400px;height:150px;margin-top:10px"/>
+<button onclick= caculate() style="width:180px;height:50px">计算最短距离</button>
+<input type="text" value="这里显示最短距离" id = "output_text" style = "width:120px;height:50px"/>
+<svg width="1000" height="600" style = "margin-left:200px"></svg>
+<script>
+    var svg = d3.select("svg")
+    var width = svg.attr("width")
+    var height = svg.attr("height")
+    var g = svg.append("g")
+    var first_id, second_id
+    var first_node = d3.select("#fisrt_node")
+    var second_node = d3.select("#second_node")
+    var output_text = d3.select("#output_text")
+    function draw(name, function_id) {
+        svg.selectAll("g").remove();
+        var g = svg.append("g")
+        //准备数据
+        var paper_loader = d3.csv(name + ".csv", function (d) {
+            return {
+                DOI: d.DOI,
+                closeness_centrality: +d.closeness_centrality,
+                betweenness_centrality: +d.betweenness_centrality,
+                group: +d.group,
+                label: +d.label
+            }
+        })
+        var paepr_connention_loader = d3.csv(name + "_connection.csv", function (d) {
+            return {
+                source: +d.source,
+                target: +d.target,
+                distance: +d.distance,
+                label: +d.label
+            }
+        })
+        var paper_distance_loader = d3.csv(name + "_distance.csv", function (d) {
+            var lst = []
+            for (var item in d)
+                lst.push(+d[item])
+            return lst
+        })
+        paper_loader.then(function (paper) {
+            paepr_connention_loader.then(function (paper_connetion) {
+                paper_distance_loader.then(function (paper_distance) {
+                    if (function_id == 1){
+                        var betweenness_centrality = []
+                        for (var i =0;i<paper.length;i++)
+                            betweenness_centrality.push(paper[i].betweenness_centrality)
+
+                        var colorScale1 = d3.scaleLinear()
+                            .domain([d3.min(betweenness_centrality),d3.max(betweenness_centrality)])
+                            .range([0,2])
+                        function compute_color1(color) {
+                            if (color < 0.001)
+                                return d3.interpolate(d3.rgb(0, 0, 255), d3.rgb(0, 255, 255))(color / 0.001)
+                            else if (color < 0.01)
+                                return d3.interpolate(d3.rgb(0, 255, 255), d3.rgb(0, 255, 0))((color - 0.001) / 0.009)
+                            else if (color < 0.1)
+                                return d3.interpolate(d3.rgb(0, 255, 0), d3.rgb(255, 255, 0))((color - 0.01) / 0.09)
+                            else
+                                return d3.interpolate(d3.rgb(255, 255, 0), d3.rgb(255, 0, 0))((color - 0.1) / 1.9)
+                        }
+                        var forceSimulation1 = d3.forceSimulation()
+                            .force("link",d3.forceLink())
+                            .force("charge",d3.forceManyBody())
+                            .force("center",d3.forceCenter())
+                        forceSimulation1.nodes(paper)
+                            .on("tick",ticked1);
+                        forceSimulation1.force("link")
+                            .links(paper_connetion)
+                            .distance(30)
+                            .strength(function(d){
+                                return 0.2*Math.pow(d.distance,-1)
+                            })
+                        forceSimulation1.force("center")
+                            .x(width/2)
+                            .y(height/2);
+                        var paper_edges1 = g.selectAll("edge")
+                            .data(paper_connetion)
+                            .enter()
+                            .append("line")
+                            .attr("stroke",d3.rgb(200,200,200))
+                            .attr("stroke-width",function(d){
+                                //show no edges
+                                return 0
+                                //show important edges
+                                /*if (d.distance < 8)
+                                    return 0.5
+                                else
+                                    return 0*/
+                                //show all the edges
+                                //return 0.5
+                            });
+                        var paper_nodes1 = g.selectAll("node")
+                            .data(paper)
+                            .enter()
+                            .append("g")
+                            .attr("transform",function(d,i){
+                                var cirX = d.x;
+                                var cirY = d.y;
+                                return "translate("+cirX+","+cirY+")";
+                            })
+                            .call(d3.drag()
+                                .on("start",started1)
+                                .on("drag",dragged1)
+                                .on("end",ended1)
+                            )
+                            .on("click",function(d){
+                                //TODO
+                            })
+                        paper_nodes1.append("circle")
+                            .attr("r",function(d){
+                                return 2+2*colorScale1(d.betweenness_centrality)})
+                            .attr("fill",function(d){
+                                return compute_color1(colorScale1(d.betweenness_centrality));
+                            })
+                        function ticked1(){
+                            paper_edges1
+                                .attr("x1",function(d){return d.source.x;})
+                                .attr("y1",function(d){return d.source.y;})
+                                .attr("x2",function(d){return d.target.x;})
+                                .attr("y2",function(d){return d.target.y;});
+
+                            paper_nodes1
+                                .attr("transform",function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+                        }
+                        function started1(d){
+                            if(!d3.event.active){
+                                forceSimulation1.alphaTarget(0.8).restart();
+                            }
+                            d.fx = d.x;
+                            d.fy = d.y;
+                        }
+                        function dragged1(d){
+                            d.fx = d3.event.x;
+                            d.fy = d3.event.y;
+                        }
+                        function ended1(d){
+                            if(!d3.event.active){
+                                forceSimulation1.alphaTarget(0);
+                            }
+                            d.fx = null;
+                            d.fy = null;
+                        }
+                    }
+                    if (function_id == 2){
+                        var closeness_centrality = []
+                        for (var i =0;i<paper.length;i++)
+                            closeness_centrality.push(paper[i].closeness_centrality)
+
+                        var colorScale2 = d3.scaleLinear()
+                            .domain([d3.min(closeness_centrality),d3.max(closeness_centrality)])
+                            .range([0,1])
+                        function compute_color2(color){
+                            if (color<0.2)
+                                return d3.interpolate(d3.rgb(255,0,0), d3.rgb(255,255,0))(color/0.2)
+                            else if(color<0.3)
+                                return d3.interpolate(d3.rgb(255,255,0), d3.rgb(0,255,0))((color-0.2)/0.1)
+                            else if (color<0.5)
+                                return d3.interpolate(d3.rgb(0,255,0), d3.rgb(0,255,255))((color-0.3)/0.2)
+                            else
+                                return d3.interpolate(d3.rgb(0,255,255), d3.rgb(0,0,255))((color-0.5)/0.5)
+                        }
+                        //新建一个力导向图
+                        var forceSimulation2 = d3.forceSimulation()
+                            .force("link",d3.forceLink())
+                            .force("charge",d3.forceManyBody())
+                            .force("center",d3.forceCenter())
+
+
+                        forceSimulation2.nodes(paper)
+                            .on("tick",ticked2);
+
+                        forceSimulation2.force("link")
+                            .links(paper_connetion)
+                            .distance(30)
+                            .strength(function(d){
+                                return 0.2*Math.pow(d.distance,-1)
+                            })
+
+                        forceSimulation2.force("center")
+                            .x(width/2)
+                            .y(height/2);
+
+                        var paper_edges2 = g.selectAll("edge")
+                            .data(paper_connetion)
+                            .enter()
+                            .append("line")
+                            .attr("stroke",d3.rgb(200,200,200))
+                            .attr("stroke-width",function(d){
+                                //show no edges
+                                return 0
+                                //show important edges
+                                /*if (d.distance < 8)
+                                    return 0.5
+                                else
+                                    return 0*/
+                                //show all the edges
+                                //return 0.5
+                            });
+
+                        var paper_nodes2 = g.selectAll("node")
+                            .data(paper)
+                            .enter()
+                            .append("g")
+                            .attr("transform",function(d,i){
+                                var cirX = d.x;
+                                var cirY = d.y;
+                                return "translate("+cirX+","+cirY+")";
+                            })
+                            .call(d3.drag()
+                                .on("start",started2)
+                                .on("drag",dragged2)
+                                .on("end",ended2)
+                            );
+
+                        paper_nodes2.append("circle")
+                            .attr("r",function(d){
+                                return 4-2*colorScale2(d.closeness_centrality)})
+                            .attr("fill",function(d){
+                                return compute_color2(colorScale2(d.closeness_centrality));
+                            })
+
+                        function ticked2(){
+                            paper_edges2
+                                .attr("x1",function(d){return d.source.x;})
+                                .attr("y1",function(d){return d.source.y;})
+                                .attr("x2",function(d){return d.target.x;})
+                                .attr("y2",function(d){return d.target.y;});
+
+                            paper_nodes2
+                                .attr("transform",function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+                        }
+                        function started2(d){
+                            if(!d3.event.active){
+                                forceSimulation2.alphaTarget(0.8).restart();
+                            }
+                            d.fx = d.x;
+                            d.fy = d.y;
+                        }
+                        function dragged2(d){
+                            d.fx = d3.event.x;
+                            d.fy = d3.event.y;
+                        }
+                        function ended2(d){
+                            if(!d3.event.active){
+                                forceSimulation2.alphaTarget(0);
+                            }
+                            d.fx = null;
+                            d.fy = null;
+                        }
+                    }
+                    if (function_id == 3) {
+                        var label = [], tmp = {}
+                        for (var i = 0; i < paper.length; i++) {
+                            if (!tmp[paper[i].label]) {
+                                tmp[paper[i].label] = true
+                                label.push(paper[i].label)
+                            }
+                        }
+                        var color = []
+                        for (var i = 0; i < label.length; i++)
+                            color.push(d3.rgb(Math.floor(Math.random() * 256), Math.floor(Math.random() * 256), Math.floor(Math.random() * 256)))
+                        for (i in color)
+                            console.log(color[i])
+                        var colorScale = d3.scaleLinear()
+                            .domain(label)
+                            .range(color)
+                        //新建一个力导向图
+                        var forceSimulation = d3.forceSimulation()
+                            .force("link", d3.forceLink())
+                            .force("charge", d3.forceManyBody())
+                            .force("center", d3.forceCenter())
+
+
+                        forceSimulation.nodes(paper)
+                            .on("tick", ticked);
+
+                        forceSimulation.force("link")
+                            .links(paper_connetion)
+                            .distance(30)
+                            .strength(function (d) {
+                                if (d.label == 1)
+                                    return Math.pow(d.distance, -1)
+                                else
+                                    return 0.1 * Math.pow(d.distance, -1)
+                            })
+
+                        forceSimulation.force("center")
+                            .x(width / 2)
+                            .y(height / 2);
+
+                        var paper_edges = g.selectAll("edge")
+                            .data(paper_connetion)
+                            .enter()
+                            .append("line")
+                            .attr("stroke", d3.rgb(200, 200, 200))
+                            .attr("stroke-width", function (d) {
+                                //show no edges
+                                return 0
+                                //show important edges
+                                /*if (d.distance < 8)
+                                    return 0.5
+                                else
+                                    return 0*/
+                                //show all the edges
+                                //return 0.5
+                            });
+
+                        var paper_nodes = g.selectAll("node")
+                            .data(paper)
+                            .enter()
+                            .append("g")
+                            .attr("transform", function (d, i) {
+                                var cirX = d.x;
+                                var cirY = d.y;
+                                return "translate(" + cirX + "," + cirY + ")";
+                            })
+                            .call(d3.drag()
+                                .on("start", started)
+                                .on("drag", dragged)
+                                .on("end", ended)
+                            );
+
+                        paper_nodes.append("circle")
+                            .attr("r", 3)
+                            .attr("fill", function (d) {
+                                return colorScale(d.label);
+                            })
+                        function ticked() {
+                            paper_edges
+                                .attr("x1", function (d) {
+                                    return d.source.x;
+                                })
+                                .attr("y1", function (d) {
+                                    return d.source.y;
+                                })
+                                .attr("x2", function (d) {
+                                    return d.target.x;
+                                })
+                                .attr("y2", function (d) {
+                                    return d.target.y;
+                                });
+
+                            paper_nodes
+                                .attr("transform", function (d) {
+                                    return "translate(" + d.x + "," + d.y + ")";
+                                });
+                        }
+
+                        function started(d) {
+                            if (!d3.event.active) {
+                                forceSimulation.alphaTarget(0.8).restart();
+                            }
+                            d.fx = d.x;
+                            d.fy = d.y;
+                        }
+
+                        function dragged(d) {
+                            d.fx = d3.event.x;
+                            d.fy = d3.event.y;
+                        }
+
+                        function ended(d) {
+                            if (!d3.event.active) {
+                                forceSimulation.alphaTarget(0);
+                            }
+                            d.fx = null;
+                            d.fy = null;
+                        }
+                    }
+
+                })
+            })
+        })
+    }
+</script>
+</body>
+</html>
