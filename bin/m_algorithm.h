@@ -5,7 +5,7 @@
 #include "data.h"
 #include <stack>
 #include <queue> 
-
+#include<iostream>
 using namespace std;
 
 template <typename T>
@@ -97,7 +97,7 @@ class LabelSpreading{
         LabelSpreading(){}
         void operator () (T& arr, const double a){
             int size = arr.size();
-            const int max_iteration = 10000;
+            const int max_interation = 10000000;
             vector<vector<double>> weight(size,vector<double>(size));
             for (int i=0;i<size;i++){
                 double sum = 0.0;
@@ -110,12 +110,13 @@ class LabelSpreading{
                 } 
             }
             for (int i=0;i<size;i++){
-                arr[i].label = i;
+                if (arr[i].betweenness_centrality>300)
+                    arr[i].label = i;
             }
 
             bool flag = true;
             int interation = 0;
-            while (flag&&interation<max_iteration){
+            while (flag&&interation<max_interation){
                 flag = true;
                 interation++;
                 for (int i = 0;i<size;i++){
@@ -123,6 +124,7 @@ class LabelSpreading{
                     int max_position;
                     map<int,double> label_chance;
                     for (int j = 0; j<arr[i].neighbors.size();j++){
+                        if (arr[arr[i].neighbors[j]].label == -1) continue;
                         auto k = label_chance.find(arr[arr[i].neighbors[j]].label);
                         if (k == label_chance.end()){
                             label_chance.insert(make_pair(arr[arr[i].neighbors[j]].label,weight[i][arr[i].neighbors[j]]));

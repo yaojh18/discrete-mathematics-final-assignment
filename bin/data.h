@@ -30,7 +30,7 @@ class Author{
         int closeness_centrality = 0;
         int betweenness_centrality = 0;
         int group = -1;
-        int label = 0;
+        int label = -1;
         vector<int> neighbors;
         vector<int> distance;
         Author(){}
@@ -45,7 +45,7 @@ class Paper{
         int closeness_centrality = 0;
         int betweenness_centrality = 0;
         int group = -1;
-        int label = 0;
+        int label = -1;
         vector<int> neighbors;
         vector<int> distance;
 

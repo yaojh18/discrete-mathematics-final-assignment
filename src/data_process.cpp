@@ -28,6 +28,5 @@ int main(){
     init_group(paper,author);
     init_label(paper,author);
     output_as_csv(paper,author,paper_connection,author_connection);
-    system("pause");
     return 0;
 }

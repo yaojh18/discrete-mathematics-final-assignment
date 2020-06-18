@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>excute</title>
+    <script type="text/javascript" src="http://d3js.org/d3.v5.js"></script>
+</head>
+<body>
+<svg width="1520" height="730"></svg>
+<script>
+    var svg = d3.select("svg")
+    var width = svg.attr("width")
+    var height = svg.attr("height")
+    var g = svg.append("g")
+
+    //准备数据
+    var paper_loader = d3.csv("paper.csv", function(d) {
+        return{
+            DOI:d.DOI,
+            closeness_centrality:+d.closeness_centrality,
+            betweenness_centrality:+d.betweenness_centrality,
+            group:+d.group,
+            label:+d.label
+        }
+    })
+    var paepr_connention_loader = d3.csv("paper_connection.csv", function(d){
+            return {source:+d.source,
+                target:+d.target,
+                distance:+d.distance,
+                label:+d.label}
+    })
+    var paper_distance_loader = d3.csv("paper_distance.csv", function(d){
+        var lst = []
+        for (var item in d)
+            lst.push(+d[item])
+        return lst
+    })
+    paper_loader.then(function(paper){
+        paepr_connention_loader.then(function(paper_connetion){
+            paper_distance_loader.then(function(paper_distance){
+                var label = [], tmp ={}
+                for (var i =0;i<paper.length;i++){
+                    if (!tmp[paper[i].label]){
+                        tmp[paper[i].label] = true
+                        label.push(paper[i].label)
+                    }
+                }
+                var color = []
+                for (var i =0;i<label.length;i++)
+                    color.push(d3.rgb(Math.floor(Math.random()*256),Math.floor(Math.random()*256),Math.floor(Math.random()*256)))
+                for (i in color)
+                    console.log(color[i])
+                var colorScale = d3.scaleLinear()
+                    .domain(label)
+                    .range(color)
+                //新建一个力导向图
+                var forceSimulation = d3.forceSimulation()
+                    .force("link",d3.forceLink())
+                    .force("charge",d3.forceManyBody())
+                    .force("center",d3.forceCenter())
+
+
+                forceSimulation.nodes(paper)
+                    .on("tick",ticked);
+
+                forceSimulation.force("link")
+                    .links(paper_connetion)
+                    .distance(30)
+                    .strength(function(d){
+                        if (d.label == 1)
+                            return Math.pow(d.distance,-1)
+                        else
+                            return 5*Math.pow(d.distance,-3)
+                    })
+
+                forceSimulation.force("center")
+                    .x(width/2)
+                    .y(height/2);
+
+                var paper_edges = g.selectAll("edge")
+                    .data(paper_connetion)
+                    .enter()
+                    .append("line")
+                    .attr("stroke",d3.rgb(200,200,200))
+                    .attr("stroke-width",function(d){
+                        return 0.5
+                        /*if (d.distance < 8)
+                            return 0.5
+                        else
+                            return 0*/
+                    });
+
+                var paper_nodes = g.selectAll("node")
+                    .data(paper)
+                    .enter()
+                    .append("g")
+                    .attr("transform",function(d,i){
+                        var cirX = d.x;
+                        var cirY = d.y;
+                        return "translate("+cirX+","+cirY+")";
+                    })
+                    .call(d3.drag()
+                        .on("start",started)
+                        .on("drag",dragged)
+                        .on("end",ended)
+                    );
+
+                paper_nodes.append("circle")
+                    .attr("r",3)
+                    .attr("fill",function(d){
+                        return colorScale(d.label);
+                    })
+                //文字备选项
+                /*paper_nodes.append("text")
+                    .attr("x",-2)
+                    .attr("y",-4)
+                    .attr("dy",2)
+                    .attr("font-size",4)
+                    .text(function(d){
+                        return d.DOI;
+                    })*/
+
+                function ticked(){
+                    paper_edges
+                        .attr("x1",function(d){return d.source.x;})
+                        .attr("y1",function(d){return d.source.y;})
+                        .attr("x2",function(d){return d.target.x;})
+                        .attr("y2",function(d){return d.target.y;});
+
+                    paper_nodes
+                        .attr("transform",function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+                }
+                function started(d){
+                    if(!d3.event.active){
+                        forceSimulation.alphaTarget(0.8).restart();
+                    }
+                    d.fx = d.x;
+                    d.fy = d.y;
+                }
+                function dragged(d){
+                    d.fx = d3.event.x;
+                    d.fy = d3.event.y;
+                }
+                function ended(d){
+                    if(!d3.event.active){
+                        forceSimulation.alphaTarget(0);
+                    }
+                    d.fx = null;
+                    d.fy = null;
+                }
+            })
+        })
+    })
+</script>
+</body>
+</html>
